@@ -2,211 +2,567 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="记账本">
-<meta name="theme-color" content="#5856D6">
+<meta name="theme-color" content="#1C1C1E">
 <link rel="manifest" href="manifest.json">
 <title>记账本</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#F2F2F7;--card:#fff;--text:#1C1C1E;--sub:#8E8E93;--accent:#5856D6;--green:#34C759;--red:#FF3B30;--border:#E5E5EA;--radius:14px;--safe-top:env(safe-area-inset-top,20px);--safe-bottom:env(safe-area-inset-bottom,0px)}
-body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro","Helvetica Neue",sans-serif;background:var(--bg);color:var(--text);-webkit-tap-highlight-color:transparent;padding-top:var(--safe-top);padding-bottom:calc(65px + var(--safe-bottom));min-height:100vh}
-.tab-bar{position:fixed;bottom:0;left:0;right:0;background:var(--card);display:flex;border-top:0.5px solid var(--border);padding-bottom:var(--safe-bottom);z-index:100}
-.tab-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 0 6px;font-size:10px;color:var(--sub);cursor:pointer;transition:color .2s}
-.tab-item.active{color:var(--accent)}
-.tab-item svg{width:24px;height:24px;margin-bottom:2px}
-.page{display:none;padding:16px}.page.active{display:block}
-.card{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
-.amount-input{font-size:44px;font-weight:700;width:100%;border:none;background:transparent;text-align:center;outline:none;color:var(--text)}
-.amount-input::placeholder{color:#ccc}
-.type-toggle{display:flex;gap:8px}
-.type-btn{flex:1;padding:10px;border:2px solid var(--border);border-radius:10px;background:var(--card);font-size:15px;font-weight:600;cursor:pointer;transition:all .2s;text-align:center}
-.type-btn.active-exp{border-color:var(--red);color:var(--red);background:#FFF5F5}
-.type-btn.active-inc{border-color:var(--green);color:var(--green);background:#F0FFF4}
-.cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.cat-btn{padding:10px 4px;border:2px solid var(--border);border-radius:10px;background:var(--card);font-size:12px;cursor:pointer;transition:all .2s;text-align:center}
-.cat-btn.sel{border-color:var(--accent);background:#EDEDFC}
-.cat-emoji{font-size:26px;display:block;margin-bottom:2px}
-input[type="text"],input[type="date"]{width:100%;padding:12px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;outline:none;background:var(--card)}
-input:focus{border-color:var(--accent)}
-.save-btn{width:100%;padding:16px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-size:17px;font-weight:600;cursor:pointer;transition:opacity .2s}
-.save-btn:active{opacity:.7}.save-btn:disabled{opacity:.4}
-.summary-row{display:flex;gap:12px}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#F2F2F7;--card:#FFFFFF;--card2:#F9F9FB;--text:#1C1C1E;--sub:#8E8E93;
+  --accent:#5856D6;--accent2:#7B68EE;--green:#34C759;--red:#FF3B30;
+  --border:rgba(0,0,0,.08);--glass:rgba(255,255,255,.72);--glass2:rgba(255,255,255,.5);
+  --shadow:0 2px 16px rgba(0,0,0,.06);--shadow2:0 8px 32px rgba(0,0,0,.08);
+  --radius:16px;--radius2:20px;--radius3:24px;
+  --safe-top:env(safe-area-inset-top,20px);--safe-bottom:env(safe-area-inset-bottom,0px);
+}
+[data-theme="dark"]{
+  --bg:#000000;--card:#1C1C1E;--card2:#2C2C2E;--text:#FFFFFF;--sub:#98989D;
+  --border:rgba(255,255,255,.1);--glass:rgba(28,28,30,.85);--glass2:rgba(28,28,30,.6);
+  --shadow:0 2px 16px rgba(0,0,0,.3);--shadow2:0 8px 32px rgba(0,0,0,.4);
+}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue",sans-serif;
+  background:var(--bg);color:var(--text);min-height:100vh;
+  padding-top:var(--safe-top);padding-bottom:calc(72px + var(--safe-bottom));
+  transition:background .3s,color .3s;
+}
+/* ============ ANIMATIONS ============ */
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes checkmark{0%{transform:scale(0) rotate(-45deg);opacity:0}50%{transform:scale(1.2) rotate(-45deg)}100%{transform:scale(1) rotate(0);opacity:1}}
+@keyframes ripple{to{transform:scale(4);opacity:0}}
+.animate-in{animation:fadeIn .4s cubic-bezier(.25,.46,.45,.94) both}
+.animate-in-delay{animation:fadeIn .4s cubic-bezier(.25,.46,.45,.94) .1s both}
+.animate-in-delay2{animation:fadeIn .4s cubic-bezier(.25,.46,.45,.94) .2s both}
+/* ============ TAB BAR ============ */
+.tab-bar{
+  position:fixed;bottom:0;left:0;right:0;
+  background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-top:0.5px solid var(--border);
+  display:flex;padding-bottom:var(--safe-bottom);z-index:100;
+}
+.tab-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  padding:10px 0 8px;cursor:pointer;position:relative;
+  transition:all .2s ease;
+}
+.tab-item .tab-icon{
+  width:28px;height:28px;margin-bottom:2px;transition:all .2s;
+}
+.tab-item .tab-label{
+  font-size:10px;font-weight:500;color:var(--sub);transition:all .2s;
+}
+.tab-item.active .tab-label{color:var(--accent);font-weight:600}
+.tab-item.active .tab-icon{color:var(--accent);transform:scale(1.1)}
+.tab-dot{
+  position:absolute;top:6px;width:4px;height:4px;border-radius:50%;
+  background:var(--accent);opacity:0;transition:opacity .2s;
+}
+.tab-item.active .tab-dot{opacity:1}
+/* ============ PAGES ============ */
+.page{display:none;padding:16px;min-height:100vh}
+.page.active{display:block}
+/* ============ CARDS ============ */
+.card{
+  background:var(--card);border-radius:var(--radius);
+  padding:16px;margin-bottom:12px;
+  box-shadow:var(--shadow);transition:all .3s;
+  border:0.5px solid var(--border);
+}
+.card:active{transform:scale(.985)}
+.card-glass{
+  background:var(--glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:0.5px solid var(--border);
+}
+/* ============ AMOUNT INPUT ============ */
+.amount-card{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border-radius:var(--radius3);padding:28px 20px;margin-bottom:16px;
+  box-shadow:0 8px 32px rgba(88,86,214,.25);position:relative;overflow:hidden;
+}
+.amount-card::before{
+  content:'';position:absolute;top:-50%;right:-30%;width:200px;height:200px;
+  background:radial-gradient(circle,rgba(255,255,255,.15),transparent 70%);
+  border-radius:50%;
+}
+.amount-card::after{
+  content:'';position:absolute;bottom:-40%;left:-20%;width:160px;height:160px;
+  background:radial-gradient(circle,rgba(255,255,255,.1),transparent 70%);
+  border-radius:50%;
+}
+.amount-wrap{display:flex;align-items:baseline;justify-content:center;position:relative;z-index:1}
+.amount-prefix{font-size:28px;font-weight:300;color:rgba(255,255,255,.7);margin-right:4px}
+.amount-input{
+  font-size:52px;font-weight:700;color:#fff;background:transparent;
+  border:none;outline:none;text-align:center;min-width:120px;
+  font-variant-numeric:tabular-nums;
+}
+.amount-input::placeholder{color:rgba(255,255,255,.35)}
+.amount-hint{
+  text-align:center;color:rgba(255,255,255,.6);font-size:13px;
+  margin-top:8px;position:relative;z-index:1;
+}
+/* ============ TYPE TOGGLE ============ */
+.type-toggle{
+  display:flex;background:var(--card2);border-radius:12px;padding:4px;gap:4px;
+  border:0.5px solid var(--border);
+}
+.type-btn{
+  flex:1;padding:10px;border:none;border-radius:10px;background:transparent;
+  font-size:15px;font-weight:600;cursor:pointer;transition:all .25s cubic-bezier(.25,.46,.45,.94);
+  color:var(--sub);position:relative;
+}
+.type-btn.active-exp{
+  background:var(--card);color:var(--red);box-shadow:0 2px 8px rgba(255,59,48,.15);
+}
+.type-btn.active-inc{
+  background:var(--card);color:var(--green);box-shadow:0 2px 8px rgba(52,199,89,.15);
+}
+/* ============ CATEGORY GRID ============ */
+.cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.cat-btn{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:12px 4px;border:2px solid transparent;border-radius:14px;
+  background:var(--card2);cursor:pointer;transition:all .2s;
+  position:relative;overflow:hidden;
+}
+.cat-btn:active{transform:scale(.92)}
+.cat-btn.sel{border-color:var(--accent);background:var(--card);box-shadow:0 4px 12px rgba(88,86,214,.15)}
+.cat-emoji{font-size:28px;line-height:1}
+.cat-name{font-size:11px;font-weight:500;color:var(--sub)}
+.cat-btn.sel .cat-name{color:var(--accent);font-weight:600}
+/* ============ FORM ============ */
+.form-label{font-size:13px;font-weight:600;color:var(--sub);margin-bottom:8px;display:block;text-transform:uppercase;letter-spacing:.5px}
+input[type="text"],input[type="date"]{
+  width:100%;padding:14px 16px;border:1.5px solid var(--border);border-radius:12px;
+  font-size:15px;outline:none;background:var(--card2);color:var(--text);
+  transition:border-color .2s,box-shadow .2s;
+}
+input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(88,86,214,.12)}
+/* ============ SAVE BUTTON ============ */
+.save-btn{
+  width:100%;padding:18px;border:none;border-radius:var(--radius);
+  font-size:17px;font-weight:600;cursor:pointer;position:relative;
+  overflow:hidden;transition:all .2s;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;box-shadow:0 4px 16px rgba(88,86,214,.3);
+}
+.save-btn:active{transform:scale(.97);box-shadow:0 2px 8px rgba(88,86,214,.2)}
+.save-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.save-btn .ripple{
+  position:absolute;border-radius:50%;background:rgba(255,255,255,.3);
+  animation:ripple .6s ease-out;pointer-events:none;
+}
+/* ============ SUCCESS OVERLAY ============ */
+.success-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(8px);
+  z-index:300;display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .3s;
+}
+.success-overlay.show{opacity:1;pointer-events:auto}
+.success-card{
+  background:var(--card);border-radius:var(--radius3);padding:40px;
+  text-align:center;box-shadow:var(--shadow2);
+  transform:scale(.8);transition:transform .4s cubic-bezier(.34,1.56,.64,1);
+}
+.success-overlay.show .success-card{transform:scale(1)}
+.success-icon{
+  width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--green),#30D158);
+  display:flex;align-items:center;justify-content:center;margin:0 auto 16px;
+}
+.success-icon svg{width:36px;height:36px;color:#fff}
+.success-title{font-size:20px;font-weight:700;margin-bottom:4px}
+.success-desc{font-size:14px;color:var(--sub)}
+/* ============ LIST ============ */
+.search-box{
+  width:100%;padding:12px 16px 12px 40px;border:none;border-radius:12px;
+  font-size:15px;outline:none;background:var(--card);color:var(--text);
+  box-shadow:var(--shadow);position:relative;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%238E8E93' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:12px center;background-size:18px;
+}
+.search-box::placeholder{color:var(--sub)}
+.filter-bar{display:flex;gap:8px;margin:12px 0}
+.filter-chip{
+  padding:8px 18px;border-radius:20px;border:none;
+  font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;
+  background:var(--card);color:var(--sub);box-shadow:var(--shadow);
+}
+.filter-chip.active{background:var(--accent);color:#fff;box-shadow:0 4px 12px rgba(88,86,214,.25)}
+/* ============ SUMMARY ============ */
+.summary-card{
+  background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+  border-radius:var(--radius3);padding:20px;margin-bottom:16px;
+  box-shadow:0 8px 32px rgba(102,126,234,.25);position:relative;overflow:hidden;
+}
+.summary-card::before{
+  content:'';position:absolute;top:-30%;right:-20%;width:180px;height:180px;
+  background:radial-gradient(circle,rgba(255,255,255,.1),transparent 70%);border-radius:50%;
+}
+.summary-row{display:flex;position:relative;z-index:1}
 .summary-item{flex:1;text-align:center}
-.summary-label{font-size:12px;color:var(--sub);margin-bottom:4px}
-.summary-value{font-size:20px;font-weight:700}
-.income{color:var(--green)}.expense{color:var(--red)}
-.filter-bar{display:flex;gap:8px;margin-bottom:12px}
-.filter-btn{padding:6px 16px;border-radius:20px;border:1.5px solid var(--border);background:var(--card);font-size:13px;cursor:pointer;transition:all .2s}
-.filter-btn.active{border-color:var(--accent);background:#EDEDFC;color:var(--accent)}
-.search-box{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;outline:none;background:var(--card);margin-bottom:12px}
-.txn-date{font-size:13px;font-weight:600;color:var(--sub);padding:8px 0 4px}
-.txn-item{display:flex;align-items:center;padding:12px 0;border-bottom:0.5px solid var(--border)}
+.summary-label{font-size:11px;color:rgba(255,255,255,.7);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.summary-val{font-size:22px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums}
+.summary-divider{width:1px;background:rgba(255,255,255,.2);margin:4px 0}
+/* ============ TRANSACTIONS ============ */
+.txn-date-header{
+  font-size:12px;font-weight:600;color:var(--sub);padding:8px 4px;
+  text-transform:uppercase;letter-spacing:.5px;
+}
+.txn-card{
+  background:var(--card);border-radius:var(--radius);overflow:hidden;
+  box-shadow:var(--shadow);border:0.5px solid var(--border);margin-bottom:12px;
+}
+.txn-item{
+  display:flex;align-items:center;padding:14px 16px;
+  border-bottom:0.5px solid var(--border);transition:background .15s;
+}
 .txn-item:last-child{border-bottom:none}
-.txn-icon{width:42px;height:42px;border-radius:50%;background:#F2F2F7;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
-.txn-info{flex:1;margin-left:12px}
-.txn-cat{font-size:15px;font-weight:500}
+.txn-item:active{background:var(--card2)}
+.txn-icon{
+  width:44px;height:44px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;font-size:24px;
+  flex-shrink:0;
+}
+.txn-icon.expense{background:linear-gradient(135deg,#FF6B6B,#FF3B30)}
+.txn-icon.income{background:linear-gradient(135deg,#51CF66,#34C759)}
+.txn-info{flex:1;margin-left:14px}
+.txn-cat{font-size:15px;font-weight:600}
 .txn-note{font-size:12px;color:var(--sub);margin-top:2px}
-.txn-amount{font-size:16px;font-weight:600;text-align:right}
-.txn-del{width:32px;height:32px;border:none;background:#FEE2E2;border-radius:8px;color:var(--red);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:8px;opacity:0;transition:opacity .2s}
+.txn-amount{font-size:17px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+.txn-amount.expense{color:var(--red)}.txn-amount.income{color:var(--green)}
+.txn-del{
+  width:32px;height:32px;border:none;border-radius:10px;
+  background:var(--card2);color:var(--sub);font-size:14px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;margin-left:10px;opacity:0;transition:opacity .2s;
+}
 .txn-item:active .txn-del{opacity:1}
-.chart-row{display:flex;align-items:flex-end;height:140px;gap:4px;padding:0 8px}
-.chart-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px}
-.chart-bars{display:flex;gap:2px;align-items:flex-end;height:110px}
-.bar{width:14px;border-radius:4px 4px 0 0;min-height:2px}
-.bar.inc{background:var(--green)}.bar.exp{background:var(--red)}
-.chart-label{font-size:10px;color:var(--sub)}
-.legend{display:flex;gap:16px;justify-content:center;margin-top:8px}
-.legend-item{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--sub)}
-.legend-dot{width:8px;height:8px;border-radius:50%}
-.rank-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-.rank-label{font-size:13px;width:48px;text-align:right;flex-shrink:0}
-.rank-track{flex:1;height:8px;background:#F2F2F7;border-radius:4px;overflow:hidden}
-.rank-fill{height:100%;border-radius:4px;transition:width .4s}
-.rank-val{font-size:13px;font-weight:600;width:60px;text-align:right;flex-shrink:0}
-.toast{position:fixed;top:60px;left:50%;transform:translateX(-50%);background:#1C1C1E;color:#fff;padding:12px 24px;border-radius:25px;font-size:14px;font-weight:500;z-index:200;opacity:0;transition:opacity .3s;pointer-events:none}
-.toast.show{opacity:1}
-.empty{text-align:center;padding:40px 0;color:var(--sub)}
-.empty-icon{font-size:48px;margin-bottom:12px}
-.form-label{font-size:14px;font-weight:600;margin-bottom:8px;display:block}
-.setting-btn{width:100%;padding:14px;background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);font-size:15px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px;margin-top:8px}
-.setting-btn:active{background:#F2F2F7}
-.setup-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px}
-.setup-card{background:var(--card);border-radius:20px;padding:24px;width:100%;max-width:360px}
-.setup-title{font-size:20px;font-weight:700;text-align:center;margin-bottom:16px}
-.setup-desc{font-size:14px;color:var(--sub);text-align:center;margin-bottom:16px;line-height:1.5}
-.setup-input{width:100%;padding:12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;outline:none;margin-bottom:12px}
-.setup-btn{width:100%;padding:14px;background:var(--accent);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer}
-.setup-btn:active{opacity:.7}
-.sync-indicator{position:fixed;top:calc(var(--safe-top) + 4px);right:12px;font-size:10px;color:var(--sub);z-index:50}
+.empty-state{text-align:center;padding:60px 20px;color:var(--sub)}
+.empty-icon{font-size:56px;margin-bottom:16px;opacity:.5}
+.empty-text{font-size:16px;font-weight:500}
+.empty-hint{font-size:13px;margin-top:4px}
+/* ============ STATS ============ */
+.donut-container{display:flex;align-items:center;gap:20px;padding:8px 0}
+.donut{width:120px;height:120px;position:relative;flex-shrink:0}
+.donut svg{width:100%;height:100%;transform:rotate(-90deg)}
+.donut circle{fill:none;stroke-width:12;stroke-linecap:round;transition:stroke-dashoffset .8s cubic-bezier(.25,.46,.45,.94)}
+.donut-center{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+}
+.donut-total{font-size:18px;font-weight:700}
+.donut-label{font-size:10px;color:var(--sub)}
+.donut-legend{flex:1}
+.donut-legend-item{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.donut-legend-dot{width:10px;height:10px;border-radius:4px;flex-shrink:0}
+.donut-legend-name{font-size:13px;flex:1}
+.donut-legend-val{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+/* ============ WEEK CHART ============ */
+.chart-container{padding:8px 0}
+.chart-row{display:flex;align-items:flex-end;height:160px;gap:8px}
+.chart-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%}
+.chart-bars{
+  display:flex;gap:4px;align-items:flex-end;flex:1;width:100%;
+  justify-content:center;
+}
+.chart-bar{
+  width:16px;border-radius:6px 6px 2px 2px;min-height:4px;
+  transition:height .6s cubic-bezier(.25,.46,.45,.94);
+}
+.chart-bar.inc{background:linear-gradient(180deg,var(--green),#30D158)}
+.chart-bar.exp{background:linear-gradient(180deg,var(--red),#FF6B6B)}
+.chart-label{font-size:11px;color:var(--sub);font-weight:500}
+.chart-label.today{color:var(--accent);font-weight:700}
+.legend-row{display:flex;gap:20px;justify-content:center;margin-top:16px}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--sub)}
+.legend-dot{width:8px;height:8px;border-radius:3px}
+/* ============ SETTINGS ============ */
+.setting-group{
+  background:var(--card);border-radius:var(--radius);overflow:hidden;
+  box-shadow:var(--shadow);border:0.5px solid var(--border);margin-bottom:16px;
+}
+.setting-item{
+  display:flex;align-items:center;padding:14px 16px;gap:12px;
+  border-bottom:0.5px solid var(--border);cursor:pointer;transition:background .15s;
+}
+.setting-item:last-child{border-bottom:none}
+.setting-item:active{background:var(--card2)}
+.setting-icon{
+  width:32px;height:32px;border-radius:8px;display:flex;align-items:center;
+  justify-content:center;font-size:16px;
+}
+.setting-text{flex:1;font-size:15px}
+.setting-arrow{color:var(--sub);font-size:18px}
+.setting-danger{color:var(--red)}
+/* ============ TOGGLE ============ */
+.toggle{
+  width:51px;height:31px;border-radius:16px;background:var(--card2);
+  border:2px solid var(--border);position:relative;cursor:pointer;
+  transition:background .3s,border-color .3s;
+}
+.toggle.on{background:var(--green);border-color:var(--green)}
+.toggle::after{
+  content:'';position:absolute;top:2px;left:2px;width:23px;height:23px;
+  border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.2);
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+}
+.toggle.on::after{transform:translateX(20px)}
+/* ============ SETUP OVERLAY ============ */
+.overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(8px);
+  z-index:400;display:flex;align-items:flex-end;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .3s;
+}
+.overlay.show{opacity:1;pointer-events:auto}
+.overlay-card{
+  background:var(--card);border-radius:var(--radius3) var(--radius3) 0 0;
+  padding:24px 20px 40px;width:100%;max-width:500px;
+  transform:translateY(100%);transition:transform .4s cubic-bezier(.34,1.56,.64,1);
+}
+.overlay.show .overlay-card{transform:translateY(0)}
+.overlay-handle{
+  width:36px;height:4px;border-radius:2px;background:var(--border);
+  margin:0 auto 20px;
+}
+.overlay-title{font-size:20px;font-weight:700;text-align:center;margin-bottom:8px}
+.overlay-desc{font-size:14px;color:var(--sub);text-align:center;margin-bottom:20px;line-height:1.5}
+.overlay-input{
+  width:100%;padding:14px 16px;border:2px solid var(--border);border-radius:14px;
+  font-size:15px;outline:none;background:var(--card2);color:var(--text);
+  margin-bottom:16px;font-family:monospace;
+}
+.overlay-input:focus{border-color:var(--accent)}
+.overlay-btn{
+  width:100%;padding:16px;border:none;border-radius:14px;
+  font-size:16px;font-weight:600;cursor:pointer;
+  background:var(--accent);color:#fff;
+  box-shadow:0 4px 16px rgba(88,86,214,.3);
+}
+.overlay-btn:active{transform:scale(.97)}
+/* ============ TOAST ============ */
+.toast{
+  position:fixed;top:calc(var(--safe-top) + 12px);left:50%;
+  transform:translateX(-50%) translateY(-20px);
+  background:var(--glass);backdrop-filter:blur(16px);
+  padding:12px 24px;border-radius:25px;font-size:14px;font-weight:600;
+  z-index:500;opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);
+  pointer-events:none;box-shadow:var(--shadow2);
+  border:0.5px solid var(--border);
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.sync-badge{
+  position:fixed;top:calc(var(--safe-top) + 4px);right:16px;
+  font-size:11px;color:var(--sub);z-index:50;font-weight:500;
+  background:var(--glass);backdrop-filter:blur(8px);padding:4px 10px;
+  border-radius:10px;opacity:0;transition:opacity .3s;
+}
+.sync-badge.show{opacity:1}
 </style>
 </head>
 <body>
 
 <div class="toast" id="toast"></div>
-<div class="sync-indicator" id="syncStatus"></div>
+<div class="sync-badge" id="syncBadge"></div>
 
 <!-- Setup Overlay -->
-<div class="setup-overlay" id="setupOverlay" style="display:none">
-  <div class="setup-card">
-    <div class="setup-title">设置 GitHub 同步</div>
-    <div class="setup-desc">输入你的 GitHub Token，数据将保存在你的 GitHub 仓库中，多设备同步不丢失。</div>
-    <input type="text" class="setup-input" id="tokenInput" placeholder="ghp_xxxxxxxxxxxx">
-    <button class="setup-btn" onclick="saveSetup()">确认</button>
+<div class="overlay" id="setupOverlay">
+  <div class="overlay-card">
+    <div class="overlay-handle"></div>
+    <div class="overlay-title">连接 GitHub</div>
+    <div class="overlay-desc">输入你的 GitHub Personal Access Token，数据将安全保存在你的仓库中。</div>
+    <input type="text" class="overlay-input" id="tokenInput" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off">
+    <button class="overlay-btn" onclick="saveSetup()">确认连接</button>
   </div>
 </div>
 
-<!-- Pages -->
-<div id="page-add" class="page active">
-  <div class="card">
-    <input type="text" class="amount-input" id="amount" placeholder="0.00" inputmode="decimal">
+<!-- Success Overlay -->
+<div class="success-overlay" id="successOverlay">
+  <div class="success-card">
+    <div class="success-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+    </div>
+    <div class="success-title" id="successTitle">已记录</div>
+    <div class="success-desc" id="successDesc"></div>
   </div>
-  <div class="card">
+</div>
+
+<!-- ============ ADD PAGE ============ -->
+<div id="page-add" class="page active">
+  <div class="amount-card animate-in">
+    <div class="amount-wrap">
+      <span class="amount-prefix">¥</span>
+      <input type="text" class="amount-input" id="amount" placeholder="0.00" inputmode="decimal">
+    </div>
+    <div class="amount-hint" id="amountHint">支出</div>
+  </div>
+
+  <div class="card animate-in-delay">
     <div class="form-label">类型</div>
     <div class="type-toggle">
       <button class="type-btn active-exp" data-type="expense" onclick="setType('expense')">📤 支出</button>
       <button class="type-btn" data-type="income" onclick="setType('income')">📥 收入</button>
     </div>
   </div>
-  <div class="card">
+
+  <div class="card animate-in-delay2">
     <div class="form-label">分类</div>
     <div class="cat-grid" id="catGrid"></div>
   </div>
-  <div class="card">
+
+  <div class="card animate-in-delay2">
     <div class="form-label">备注</div>
     <input type="text" id="note" placeholder="添加备注（可选）">
-    <div class="form-label" style="margin-top:12px">日期</div>
+    <div class="form-label" style="margin-top:16px">日期</div>
     <input type="date" id="txDate">
   </div>
-  <button class="save-btn" id="saveBtn" onclick="saveTransaction()">保存</button>
+
+  <button class="save-btn animate-in-delay2" id="saveBtn" onclick="saveTransaction()">
+    保存记录
+  </button>
 </div>
 
+<!-- ============ LIST PAGE ============ -->
 <div id="page-list" class="page">
-  <input type="text" class="search-box" id="searchBox" placeholder="🔍 搜索备注或分类...">
-  <div class="filter-bar">
-    <button class="filter-btn active" data-f="all" onclick="setFilter('all')">全部</button>
-    <button class="filter-btn" data-f="expense" onclick="setFilter('expense')">支出</button>
-    <button class="filter-btn" data-f="income" onclick="setFilter('income')">收入</button>
-  </div>
-  <div class="card">
+  <div class="summary-card animate-in">
     <div class="summary-row">
-      <div class="summary-item"><div class="summary-label">今日收入</div><div class="summary-value income" id="tIncome">0</div></div>
-      <div class="summary-item"><div class="summary-label">今日支出</div><div class="summary-value expense" id="tExpense">0</div></div>
-      <div class="summary-item"><div class="summary-label">结余</div><div class="summary-value" id="tBalance">0</div></div>
+      <div class="summary-item">
+        <div class="summary-label">今日收入</div>
+        <div class="summary-val" id="tIncome">¥0.00</div>
+      </div>
+      <div class="summary-divider"></div>
+      <div class="summary-item">
+        <div class="summary-label">今日支出</div>
+        <div class="summary-val" id="tExpense">¥0.00</div>
+      </div>
+      <div class="summary-divider"></div>
+      <div class="summary-item">
+        <div class="summary-label">结余</div>
+        <div class="summary-val" id="tBalance">¥0.00</div>
+      </div>
     </div>
   </div>
-  <div id="txnList"></div>
+
+  <input type="text" class="search-box animate-in-delay" id="searchBox" placeholder="搜索备注或分类...">
+
+  <div class="filter-bar animate-in-delay">
+    <button class="filter-chip active" data-f="all" onclick="setFilter('all')">全部</button>
+    <button class="filter-chip" data-f="expense" onclick="setFilter('expense')">支出</button>
+    <button class="filter-chip" data-f="income" onclick="setFilter('income')">收入</button>
+  </div>
+
+  <div id="txnList" class="animate-in-delay2"></div>
 </div>
 
+<!-- ============ STATS PAGE ============ -->
 <div id="page-stats" class="page">
-  <div class="card">
+  <div class="card animate-in">
     <div class="form-label">本月收支</div>
-    <div class="summary-row" style="margin-top:8px">
-      <div class="summary-item"><div class="summary-label">收入</div><div class="summary-value income" id="mIncome">0</div></div>
-      <div class="summary-item"><div class="summary-label">支出</div><div class="summary-value expense" id="mExpense">0</div></div>
-      <div class="summary-item"><div class="summary-label">结余</div><div class="summary-value" id="mBalance">0</div></div>
+    <div class="summary-row" style="margin-top:12px;background:linear-gradient(135deg,#667eea,#764ba2);border-radius:var(--radius);padding:20px">
+      <div class="summary-item"><div class="summary-label">收入</div><div class="summary-val" id="mIncome">¥0</div></div>
+      <div class="summary-divider"></div>
+      <div class="summary-item"><div class="summary-label">支出</div><div class="summary-val" id="mExpense">¥0</div></div>
+      <div class="summary-divider"></div>
+      <div class="summary-item"><div class="summary-label">结余</div><div class="summary-val" id="mBalance">¥0</div></div>
     </div>
   </div>
-  <div class="card">
+
+  <div class="card animate-in-delay">
+    <div class="form-label">支出分类</div>
+    <div id="donutChart"></div>
+  </div>
+
+  <div class="card animate-in-delay2">
     <div class="form-label">最近7天</div>
-    <div class="chart-row" id="weekChart"></div>
-    <div class="legend">
-      <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>收入</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>支出</div>
+    <div class="chart-container">
+      <div class="chart-row" id="weekChart"></div>
+      <div class="legend-row">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>收入</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>支出</div>
+      </div>
     </div>
   </div>
-  <div class="card">
-    <div class="form-label">本月支出分类</div>
-    <div id="catRanking"></div>
-  </div>
 </div>
 
+<!-- ============ SETTINGS PAGE ============ -->
 <div id="page-settings" class="page">
-  <div class="card">
-    <div class="form-label">数据同步</div>
-    <p style="font-size:13px;color:var(--sub);margin-bottom:8px" id="syncInfo">正在检查...</p>
-    <button class="setting-btn" onclick="manualSync()">🔄 手动同步</button>
-    <button class="setting-btn" onclick="changeToken()">🔑 修改 Token</button>
+  <div class="setting-group animate-in">
+    <div class="setting-item" onclick="manualSync()">
+      <div class="setting-icon" style="background:#E8F5E9">🔄</div>
+      <div class="setting-text">手动同步</div>
+      <div class="setting-arrow">›</div>
+    </div>
+    <div class="setting-item" onclick="changeToken()">
+      <div class="setting-icon" style="background:#E3F2FD">🔑</div>
+      <div class="setting-text">修改 Token</div>
+      <div class="setting-arrow">›</div>
+    </div>
   </div>
-  <div class="card">
-    <div class="form-label">数据管理</div>
-    <button class="setting-btn" onclick="exportCSV()">📄 导出 CSV</button>
-    <button class="setting-btn" onclick="clearAll()" style="color:var(--red)">🗑️ 清空所有数据</button>
+
+  <div class="setting-group animate-in-delay">
+    <div class="setting-item">
+      <div class="setting-icon" style="background:#F3E5F5">🌙</div>
+      <div class="setting-text">深色模式</div>
+      <div class="toggle" id="darkToggle" onclick="toggleDark()"></div>
+    </div>
   </div>
-  <div class="card">
-    <div class="form-label">快捷指令</div>
-    <p style="font-size:13px;color:var(--sub);line-height:1.6">
-      在 iPhone 快捷指令 App中创建：<br><br>
-      <b>URL：</b><br>
-      <code style="background:#f0f0f0;padding:2px 6px;border-radius:4px;font-size:12px" id="shortcutUrl">加载中...</code><br><br>
-      <b>操作：</b>添加「URL」+「打开 URL」<br>
-      <b>Siri：</b>说"记账"触发
-    </p>
+
+  <div class="setting-group animate-in-delay">
+    <div class="setting-item" onclick="exportCSV()">
+      <div class="setting-icon" style="background:#FFF3E0">📄</div>
+      <div class="setting-text">导出 CSV</div>
+      <div class="setting-arrow">›</div>
+    </div>
+    <div class="setting-item" onclick="clearAll()">
+      <div class="setting-icon" style="background:#FFEBEE">🗑️</div>
+      <div class="setting-text setting-danger">清空所有数据</div>
+      <div class="setting-arrow">›</div>
+    </div>
   </div>
-  <div class="card" style="text-align:center">
-    <p style="font-size:12px;color:var(--sub)">记账本 v2.0 · GitHub 同步版</p>
+
+  <div class="setting-group animate-in-delay2">
+    <div class="setting-item">
+      <div class="setting-icon" style="background:#E8EAF6">📱</div>
+      <div class="setting-text">快捷指令 URL</div>
+    </div>
+    <div style="padding:0 16px 16px">
+      <code style="font-size:11px;color:var(--sub);word-break:break-all;background:var(--card2);padding:8px 12px;border-radius:8px;display:block" id="shortcutUrl"></code>
+    </div>
+  </div>
+
+  <div style="text-align:center;padding:20px">
+    <p style="font-size:12px;color:var(--sub)">记账本 v3.0 · GitHub 同步</p>
+    <p style="font-size:11px;color:var(--sub);margin-top:4px" id="dataCount"></p>
   </div>
 </div>
 
-<!-- Tab Bar -->
+<!-- ============ TAB BAR ============ -->
 <div class="tab-bar">
   <div class="tab-item active" onclick="switchTab('add')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
-    <span>记账</span>
+    <div class="tab-dot"></div>
+    <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+    <span class="tab-label">记账</span>
   </div>
   <div class="tab-item" onclick="switchTab('list')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
-    <span>账单</span>
+    <div class="tab-dot"></div>
+    <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+    <span class="tab-label">账单</span>
   </div>
   <div class="tab-item" onclick="switchTab('stats')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/><path d="M12 3a9 9 0 019 9H12V3z"/></svg>
-    <span>统计</span>
+    <div class="tab-dot"></div>
+    <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/><path d="M12 3a9 9 0 019 9H12V3z"/></svg>
+    <span class="tab-label">统计</span>
   </div>
   <div class="tab-item" onclick="switchTab('settings')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-    <span>设置</span>
+    <div class="tab-dot"></div>
+    <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    <span class="tab-label">设置</span>
   </div>
 </div>
 
@@ -223,67 +579,57 @@ const API_BASE = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/$
 // ============================================================
 //  GITHUB STORAGE
 // ============================================================
-let dataSha = null; // For optimistic concurrency
-let localData = [];
-let syncing = false;
+let dataSha = null, localData = [], syncing = false;
+
+function b64Encode(str) {
+  return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_, p1) => String.fromCharCode('0x' + p1)));
+}
+function b64Decode(str) {
+  return decodeURIComponent(atob(str).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+}
 
 async function fetchFromGitHub() {
   try {
     const res = await fetch(API_BASE, {
       headers: { 'Authorization': `token ${GH_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
     });
-    if (res.status === 404) {
-      localData = [];
-      dataSha = null;
-      return;
-    }
-    if (!res.ok) throw new Error(`GitHub API error: ${res.status}`);
+    if (res.status === 404) { localData = []; dataSha = null; return; }
+    if (!res.ok) throw new Error(res.status);
     const json = await res.json();
     dataSha = json.sha;
-    localData = JSON.parse(atob(json.content));
+    localData = JSON.parse(b64Decode(json.content));
   } catch (e) {
-    console.error('Fetch error:', e);
-    // Fallback to localStorage
-    const cached = localStorage.getItem('bookkeeping_cache');
+    const cached = localStorage.getItem('bk_cache');
     if (cached) localData = JSON.parse(cached);
   }
 }
 
 async function pushToGitHub() {
   try {
-    syncing = true;
-    updateSyncStatus();
-    const content = btoa(unescape(encodeURIComponent(JSON.stringify(localData))));
-    const body = { message: 'update data', content };
+    syncing = true; showSync('⟳ 同步中...');
+    const content = b64Encode(JSON.stringify(localData));
+    const body = { message: 'update', content };
     if (dataSha) body.sha = dataSha;
     const res = await fetch(API_BASE, {
       method: 'PUT',
-      headers: {
-        'Authorization': `token ${GH_TOKEN}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/vnd.github.v3+json'
-      },
+      headers: { 'Authorization': `token ${GH_TOKEN}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     });
-    if (!res.ok) throw new Error(`GitHub API error: ${res.status}`);
+    if (!res.ok) throw new Error(res.status);
     const json = await res.json();
     dataSha = json.content.sha;
-    localStorage.setItem('bookkeeping_cache', JSON.stringify(localData));
-    syncing = false;
-    updateSyncStatus();
+    localStorage.setItem('bk_cache', JSON.stringify(localData));
+    syncing = false; showSync('✓ 已同步');
   } catch (e) {
-    console.error('Push error:', e);
-    syncing = false;
-    updateSyncStatus();
-    showToast('⚠️ 同步失败，已保存到本地');
-    localStorage.setItem('bookkeeping_cache', JSON.stringify(localData));
+    syncing = false; showSync('⚠️ 同步失败');
+    localStorage.setItem('bk_cache', JSON.stringify(localData));
   }
 }
 
-function updateSyncStatus() {
-  const el = document.getElementById('syncStatus');
-  el.textContent = syncing ? '⟳ 同步中...' : '✓ 已同步';
-  setTimeout(() => { if (!syncing) el.textContent = ''; }, 2000);
+function showSync(msg) {
+  const el = document.getElementById('syncBadge');
+  el.textContent = msg; el.classList.add('show');
+  if (msg.startsWith('✓')) setTimeout(() => el.classList.remove('show'), 2000);
 }
 
 // ============================================================
@@ -302,11 +648,27 @@ const CATS = {
     {id:'other',emoji:'📌',name:'其他'},
   ]
 };
+const COLORS = ['#FF6B6B','#FFA94D','#FFD43B','#69DB7C','#4DABF7','#9775FA','#F783AC','#ADB5BD'];
 
 // ============================================================
 //  STATE
 // ============================================================
 let curType = 'expense', curCat = 'food', curFilter = 'all';
+
+// ============================================================
+//  DARK MODE
+// ============================================================
+function toggleDark() {
+  const isDark = document.documentElement.toggleAttribute('data-theme-dark');
+  // Actually toggle data-theme
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'dark' ? '' : 'dark';
+  if (next) document.documentElement.setAttribute('data-theme', next);
+  else document.documentElement.removeAttribute('data-theme');
+  localStorage.setItem('bk_dark', next);
+  document.getElementById('darkToggle').classList.toggle('on', next === 'dark');
+  document.querySelector('meta[name="theme-color"]').content = next === 'dark' ? '#000' : '#1C1C1E';
+}
 
 // ============================================================
 //  TAB
@@ -329,12 +691,13 @@ function setType(t) {
   document.querySelectorAll('.type-btn').forEach(b => {
     b.className = 'type-btn' + (b.dataset.type===t ? (t==='expense'?' active-exp':' active-inc') : '');
   });
+  document.getElementById('amountHint').textContent = t==='expense' ? '支出' : '收入';
   renderCatGrid();
 }
 
 function renderCatGrid() {
-  document.getElementById('catGrid').innerHTML = CATS[curType].map(c =>
-    `<button class="cat-btn${c.id===curCat?' sel':''}" onclick="selectCat('${c.id}')"><span class="cat-emoji">${c.emoji}</span>${c.name}</button>`
+  document.getElementById('catGrid').innerHTML = CATS[curType].map((c,i) =>
+    `<button class="cat-btn${c.id===curCat?' sel':''}" onclick="selectCat('${c.id}')" style="animation-delay:${i*30}ms"><span class="cat-emoji">${c.emoji}</span><span class="cat-name">${c.name}</span></button>`
   ).join('');
 }
 
@@ -355,13 +718,22 @@ async function saveTransaction() {
   await pushToGitHub();
   document.getElementById('amount').value = '';
   document.getElementById('note').value = '';
-  showToast('✅ 已记录');
+  showSuccess(curType === 'expense' ? '支出已记录' : '收入已记录',
+    `¥${amount.toFixed(2)} ${cat.emoji} ${cat.name}`);
+}
+
+function showSuccess(title, desc) {
+  document.getElementById('successTitle').textContent = title;
+  document.getElementById('successDesc').textContent = desc;
+  const el = document.getElementById('successOverlay');
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 1500);
 }
 
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 1800);
+  setTimeout(() => t.classList.remove('show'), 2000);
 }
 
 // ============================================================
@@ -369,7 +741,7 @@ function showToast(msg) {
 // ============================================================
 function setFilter(f) {
   curFilter = f;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.f===f));
+  document.querySelectorAll('.filter-chip').forEach(b => b.classList.toggle('active', b.dataset.f===f));
   renderList();
 }
 
@@ -382,9 +754,7 @@ function renderList() {
   document.getElementById('tIncome').textContent = '¥'+tInc.toFixed(2);
   document.getElementById('tExpense').textContent = '¥'+tExp.toFixed(2);
   const bal = tInc - tExp;
-  const balEl = document.getElementById('tBalance');
-  balEl.textContent = '¥'+bal.toFixed(2);
-  balEl.className = 'summary-value '+(bal>=0?'income':'expense');
+  document.getElementById('tBalance').textContent = '¥'+bal.toFixed(2);
 
   let filtered = localData.slice().sort((a,b)=>b.ts-a.ts);
   if (curFilter!=='all') filtered = filtered.filter(t=>t.type===curFilter);
@@ -395,13 +765,21 @@ function renderList() {
   const sections = Object.entries(grouped).sort(([a],[b])=>b.localeCompare(a));
 
   const container = document.getElementById('txnList');
-  if (!filtered.length) { container.innerHTML='<div class="empty"><div class="empty-icon">📝</div>暂无记录</div>'; return; }
+  if (!filtered.length) {
+    container.innerHTML='<div class="empty-state"><div class="empty-icon">📝</div><div class="empty-text">暂无记录</div><div class="empty-hint">点击记账开始记录</div></div>';
+    return;
+  }
 
   let html = '';
   for (const [date, items] of sections) {
-    html += `<div class="card"><div class="txn-date">${fmtDate(date)}</div>`;
+    html += `<div class="txn-date-header">${fmtDate(date)}</div><div class="txn-card">`;
     items.forEach(t => {
-      html += `<div class="txn-item"><div class="txn-icon">${t.catEmoji}</div><div class="txn-info"><div class="txn-cat">${t.catName}</div>${t.note?`<div class="txn-note">${esc(t.note)}</div>`:''}</div><div class="txn-amount ${t.type}">${t.type==='expense'?'-':'+'}¥${t.amount.toFixed(2)}</div><button class="txn-del" onclick="delTxn('${t.id}')">✕</button></div>`;
+      html += `<div class="txn-item">
+        <div class="txn-icon ${t.type}">${t.catEmoji}</div>
+        <div class="txn-info"><div class="txn-cat">${t.catName}</div>${t.note?`<div class="txn-note">${esc(t.note)}</div>`:''}</div>
+        <div class="txn-amount ${t.type}">${t.type==='expense'?'-':'+'}¥${t.amount.toFixed(2)}</div>
+        <button class="txn-del" onclick="delTxn('${t.id}')">✕</button>
+      </div>`;
     });
     html += '</div>';
   }
@@ -409,7 +787,7 @@ function renderList() {
 }
 
 async function delTxn(id) {
-  if (!confirm('确定删除？')) return;
+  if (!confirm('确定删除这条记录？')) return;
   localData = localData.filter(t => t.id !== id);
   await pushToGitHub();
   renderList();
@@ -424,7 +802,6 @@ function fmtDate(d) {
   const [y,m,dy] = d.split('-');
   return parseInt(m)+'月'+parseInt(dy)+'日';
 }
-
 function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 // ============================================================
@@ -439,13 +816,66 @@ function renderStats() {
   document.getElementById('mIncome').textContent='¥'+mInc.toFixed(0);
   document.getElementById('mExpense').textContent='¥'+mExp.toFixed(0);
   const mBal = mInc-mExp;
-  const mBalEl = document.getElementById('mBalance');
-  mBalEl.textContent='¥'+mBal.toFixed(0);
-  mBalEl.className='summary-value '+(mBal>=0?'income':'expense');
+  document.getElementById('mBalance').textContent='¥'+mBal.toFixed(0);
+
+  // Donut chart
+  renderDonut(monthTxns);
 
   // Week chart
-  const days=[], dayNames=['日','一','二','三','四','五','六'];
+  renderWeekChart();
+}
+
+function renderDonut(monthTxns) {
+  const expenses = monthTxns.filter(t=>t.type==='expense');
+  const total = expenses.reduce((s,t)=>s+t.amount,0);
+  const grouped = {};
+  expenses.forEach(t => {
+    if(!grouped[t.category]) grouped[t.category]={emoji:t.catEmoji,name:t.catName,amount:0};
+    grouped[t.category].amount += t.amount;
+  });
+  const sorted = Object.values(grouped).sort((a,b)=>b.amount-a.amount);
+
+  if (!sorted.length) {
+    document.getElementById('donutChart').innerHTML='<div style="text-align:center;color:var(--sub);padding:30px">暂无支出数据</div>';
+    return;
+  }
+
+  const r = 48, circ = 2 * Math.PI * r;
+  let offset = 0;
+  let circles = '';
+  sorted.forEach((c, i) => {
+    const pct = c.amount / total;
+    const dash = pct * circ;
+    circles += `<circle cx="60" cy="60" r="${r}" stroke="${COLORS[i % COLORS.length]}" stroke-dasharray="${dash} ${circ - dash}" stroke-dashoffset="${-offset}" style="transition-delay:${i*100}ms"/>`;
+    offset += dash;
+  });
+
+  const legend = sorted.map((c, i) => {
+    const pct = (c.amount / total * 100).toFixed(0);
+    return `<div class="donut-legend-item">
+      <div class="donut-legend-dot" style="background:${COLORS[i%COLORS.length]}"></div>
+      <div class="donut-legend-name">${c.emoji} ${c.name}</div>
+      <div class="donut-legend-val">¥${c.amount.toFixed(0)} ${pct}%</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('donutChart').innerHTML = `
+    <div class="donut-container">
+      <div class="donut">
+        <svg viewBox="0 0 120 120">${circles}</svg>
+        <div class="donut-center">
+          <div class="donut-total">¥${total.toFixed(0)}</div>
+          <div class="donut-label">总支出</div>
+        </div>
+      </div>
+      <div class="donut-legend">${legend}</div>
+    </div>`;
+}
+
+function renderWeekChart() {
+  const dayNames=['日','一','二','三','四','五','六'];
   let weekMax = 0;
+  const days = [];
   for (let i=6;i>=0;i--) {
     const d = new Date(Date.now()-i*86400000);
     const ds = d.toISOString().slice(0,10);
@@ -453,94 +883,98 @@ function renderStats() {
     const inc = dt.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
     const exp = dt.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
     weekMax = Math.max(weekMax, inc, exp);
-    days.push({label:i===0?'今':dayNames[d.getDay()], inc, exp});
+    days.push({label:i===0?'今':dayNames[d.getDay()], today:i===0, inc, exp});
   }
   document.getElementById('weekChart').innerHTML = days.map(d => {
-    return `<div class="chart-col"><div class="chart-bars"><div class="bar inc" style="height:${weekMax?d.inc/weekMax*100:0}%"></div><div class="bar exp" style="height:${weekMax?d.exp/weekMax*100:0}%"></div></div><div class="chart-label">${d.label}</div></div>`;
+    const incH = weekMax ? d.inc/weekMax*100 : 0;
+    const expH = weekMax ? d.exp/weekMax*100 : 0;
+    return `<div class="chart-col">
+      <div class="chart-bars">
+        <div class="chart-bar inc" style="height:${incH}%"></div>
+        <div class="chart-bar exp" style="height:${expH}%"></div>
+      </div>
+      <div class="chart-label${d.today?' today':''}">${d.label}</div>
+    </div>`;
   }).join('');
-
-  // Category ranking
-  const expByCat = {};
-  monthTxns.filter(t=>t.type==='expense').forEach(t => {
-    if(!expByCat[t.category]) expByCat[t.category]={emoji:t.catEmoji,name:t.catName,amount:0};
-    expByCat[t.category].amount += t.amount;
-  });
-  const sorted = Object.values(expByCat).sort((a,b)=>b.amount-a.amount);
-  const total = sorted.reduce((s,c)=>s+c.amount,0);
-  const maxA = sorted[0]?.amount||1;
-  document.getElementById('catRanking').innerHTML = sorted.length ? sorted.map(c => {
-    const pct = total?c.amount/total*100:0;
-    return `<div class="rank-row"><div class="rank-label">${c.emoji} ${c.name}</div><div class="rank-track"><div class="rank-fill" style="width:${c.amount/maxA*100}%;background:var(--accent)"></div></div><div class="rank-val">¥${c.amount.toFixed(0)} ${pct.toFixed(0)}%</div></div>`;
-  }).join('') : '<div style="text-align:center;color:var(--sub);padding:20px">暂无支出</div>';
 }
 
 // ============================================================
-//  SETTINGS PAGE
+//  SETTINGS
 // ============================================================
 function renderSettings() {
-  document.getElementById('syncInfo').textContent = `GitHub 同步已开启 · 共 ${localData.length} 条记录`;
+  document.getElementById('dataCount').textContent = `共 ${localData.length} 条记录`;
   document.getElementById('shortcutUrl').textContent = location.href.split('?')[0] + '?action=add&amount=35&category=food&note=午饭';
 }
 
 async function manualSync() {
   showToast('⟳ 同步中...');
   await fetchFromGitHub();
-  showToast('✅ 同步完成');
+  showToast(`✅ 已同步 · ${localData.length} 条`);
+}
+
+function changeToken() {
+  document.getElementById('tokenInput').value = '';
+  document.getElementById('setupOverlay').classList.add('show');
 }
 
 function exportCSV() {
   if (!localData.length) { showToast('暂无数据'); return; }
   const sorted = [...localData].sort((a,b)=>a.date.localeCompare(b.date));
-  let csv = '﻿日期,类型,分类,金额,备注\n';
+  let csv = '日期,类型,分类,金额,备注\n';
   sorted.forEach(t => {
     csv += `${t.date},${t.type==='expense'?'支出':'收入'},${t.catName},${t.amount},"${(t.note||'').replace(/"/g,'""')}"\n`;
   });
-  const blob = new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const blob = new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = `记账本_${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
-  showToast('已导出 CSV');
+  showToast('已导出');
 }
 
 function clearAll() {
   if (!confirm('确定清空所有数据？')) return;
-  if (!confirm('再次确认：真的要删除全部吗？')) return;
+  if (!confirm('此操作不可恢复！')) return;
   localData = [];
   pushToGitHub();
   showToast('已清空');
 }
 
-function changeToken() {
-  document.getElementById('tokenInput').value = '';
-  document.getElementById('setupOverlay').style.display = 'flex';
+// ============================================================
+//  SETUP
+// ============================================================
+function saveSetup() {
+  const token = document.getElementById('tokenInput').value.trim();
+  if (!token) { showToast('请输入 Token'); return; }
+  GH_TOKEN = token;
+  localStorage.setItem('gh_token', token);
+  document.getElementById('setupOverlay').classList.remove('show');
+  showToast('✅ 已连接');
+  init();
 }
 
 // ============================================================
-//  URL SCHEME HANDLER
+//  URL HANDLER
 // ============================================================
 function handleURL() {
   const params = new URLSearchParams(location.search);
-  const action = params.get('action');
-  if (!action) return;
-  if (action==='add') {
-    const amount = parseFloat(params.get('amount'));
-    const catId = params.get('category')||'other';
-    const note = params.get('note')||'';
-    const type = params.get('type')||'expense';
-    const date = params.get('date')||new Date().toISOString().slice(0,10);
-    if (!amount) { showToast('⚠️ 金额无效'); return; }
-    const cats = CATS[type]||CATS.expense;
-    const cat = cats.find(c=>c.id===catId)||cats[cats.length-1];
-    localData.push({
-      id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),
-      amount, type, category:catId, catName:cat.name, catEmoji:cat.emoji,
-      note, date, ts:Date.now()
-    });
-    pushToGitHub();
-    showToast(`✅ ${type==='income'?'收入':'支出'} ¥${amount.toFixed(2)} ${cat.emoji}${cat.name}`);
-    history.replaceState(null,'',location.pathname);
-  }
+  if (params.get('action') !== 'add') return;
+  const amount = parseFloat(params.get('amount'));
+  const catId = params.get('category')||'other';
+  const note = params.get('note')||'';
+  const type = params.get('type')||'expense';
+  const date = params.get('date')||new Date().toISOString().slice(0,10);
+  if (!amount) return;
+  const cats = CATS[type]||CATS.expense;
+  const cat = cats.find(c=>c.id===catId)||cats[cats.length-1];
+  localData.push({
+    id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+    amount,type,category:catId,catName:cat.name,catEmoji:cat.emoji,
+    note,date,ts:Date.now()
+  });
+  pushToGitHub();
+  showSuccess(type==='income'?'收入已记录':'支出已记录', `¥${amount.toFixed(2)} ${cat.emoji} ${cat.name}`);
+  history.replaceState(null,'',location.pathname);
 }
 
 // ============================================================
@@ -551,26 +985,34 @@ async function init() {
   renderCatGrid();
   document.getElementById('searchBox').addEventListener('input', renderList);
 
+  // Dark mode
+  const savedDark = localStorage.getItem('bk_dark');
+  if (savedDark === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    document.getElementById('darkToggle').classList.add('on');
+  }
+
   if (!GH_TOKEN) {
-    document.getElementById('setupOverlay').style.display = 'flex';
+    document.getElementById('setupOverlay').classList.add('show');
     return;
   }
 
-  showToast('⟳ 加载数据...');
+  showToast('⟳ 加载中...');
   await fetchFromGitHub();
-  showToast(`✅ 已加载 ${localData.length} 条记录`);
+  showToast(`✅ ${localData.length} 条记录`);
   handleURL();
 }
 
-function saveSetup() {
-  const token = document.getElementById('tokenInput').value.trim();
-  if (!token) { showToast('请输入 Token'); return; }
-  GH_TOKEN = token;
-  localStorage.setItem('gh_token', token);
-  document.getElementById('setupOverlay').style.display = 'none';
-  showToast('✅ 设置成功');
-  init();
-}
+// Ripple effect on save button
+document.getElementById('saveBtn').addEventListener('touchstart', function(e) {
+  const rect = this.getBoundingClientRect();
+  const ripple = document.createElement('span');
+  ripple.className = 'ripple';
+  ripple.style.left = (e.touches[0].clientX - rect.left) + 'px';
+  ripple.style.top = (e.touches[0].clientY - rect.top) + 'px';
+  this.appendChild(ripple);
+  setTimeout(() => ripple.remove(), 600);
+});
 
 init();
 </script>
